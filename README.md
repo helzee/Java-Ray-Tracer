@@ -23,7 +23,7 @@ The raytracer supports primitives such as
 - [X] Spheres
 - [X] Triangles
 
-\At some point I would like to add 
+At some point I would like to add 
 - [ ] Boxes
 - [ ] Cones
 - [ ] Cylinders.
