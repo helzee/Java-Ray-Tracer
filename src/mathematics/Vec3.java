@@ -14,6 +14,10 @@ public class Vec3 {
         return new Vec3(v.x + this.x, v.y + this.y, v.z + this.z);
     }
 
+    public Vec3 add(double scalar) {
+        return new Vec3(this.x + scalar, this.y * scalar, this.z * scalar);
+    }
+
     public Vec3 sub(Vec3 v) {
         return new Vec3(this.x - v.x, this.y - v.y, this.z - v.z);
     }

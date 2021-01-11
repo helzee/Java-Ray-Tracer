@@ -3,6 +3,9 @@ package shapes;
 import mathematics.Node;
 import mathematics.Vec3;
 import renderer.*;
+import sun.awt.SunHints;
+
+import java.security.InvalidParameterException;
 
 public class Scene {
 
@@ -12,9 +15,10 @@ public class Scene {
 
     public static boolean flag = false;
 
-    final double GLOBAL_ILLUMINATION, RECURSION_DEPTH;
+    final double GLOBAL_ILLUMINATION;
+    final int RECURSION_DEPTH;
 
-    public Scene(double globalIllumination, double recursionDepth, Camera camera, Shape... shapes) {
+    public Scene(double globalIllumination, int recursionDepth, Camera camera, Shape... shapes) {
         this.lights = new Node<Light>(null);
         this.shapes = new Node<Shape>(null);
         this.camera = camera;
@@ -48,76 +52,96 @@ public class Scene {
     }
 
     public Color castRay(Ray r) {
-        Intersection intersection = new Intersection();
-
         // first, find closest intersection of the ray with any object in the scene
-        for (int i = 0; i < this.shapes.length(); i++) {
-            // we only need to find the closest point. we need to keep track of the closest weve gotten so far, and only
-            // update the closest if we got any closer
-            double intersectionPoint = this.shapes.get(i).getIntersection(r, intersection);
-            if (intersectionPoint < intersection.pointOfIntersection) {
-                intersection = new Intersection(intersectionPoint, this.shapes.get(i));
-            }
-
-        }
+        Intersection intersection = getIntersection(r);
 
         // then, find how illuminated the point should be
-        if (intersection.shape != null)
-            return getColor(intersection, r);
-        return new Color(.25);
+        if (intersection.isIntersecting)
+            return getColor(intersection, r, this.RECURSION_DEPTH);
+        return new Color(0);
 
     }
 
     public boolean rayIntersects(Ray r, Shape sourceShape) {
         // this function is the same as castRay, except it only checks if the ray hits something or not.
         // this will speed up the testing time with most shapes, and thus speed up performance.
-        Intersection intersection = new Intersection();
+        Intersection intersection = getIntersection(r);
 
-        for (int i = 0; i < this.shapes.length(); i++) {
-            Shape shape = this.shapes.get(i);
-            if (shape.intersects(r, intersection))
-                    intersection = new Intersection(shape.getIntersection(r, intersection), shape);
-        }
-
-        if (sourceShape instanceof Sphere && intersection.shape instanceof Plane && sourceShape != intersection.shape) {
-            //System.out.println("ray " + r.origin + ", " + r.direction + " hit at " + r.calculate(intersection.pointOfIntersection));
-            if (flag) {
-                this.addShapes(new Sphere(r.calculate(intersection.pointOfIntersection), .1, new Color(1), 0.2, 0.4));
-                flag = !flag;
-            }
-        }
-            //System.out.println(sourceShape + " hit " + intersection.shape + ", at " + r.calculate(intersection.pointOfIntersection));
-
-        if (intersection.pointOfIntersection != Double.POSITIVE_INFINITY && intersection.shape != sourceShape)
+        if (intersection.isIntersecting && intersection.shape != sourceShape)
             return true;
         return false;
     }
 
-    public Color getColor(Intersection intersection, Ray ray) {
-        // TODO: internal reflections with recursion.
+    public Intersection getIntersection(Ray ray) {
+        Intersection intersection = new Intersection();
+
+        for (int i = 0; i < this.shapes.length(); i++) {
+            // we only need to find the closest point. we need to keep track of the closest weve gotten so far, and only
+            // update the closest if we got any closer
+            double intersectionPoint = this.shapes.get(i).getIntersection(ray, intersection);
+            if (intersectionPoint < intersection.pointOfIntersection) {
+                intersection = new Intersection(intersectionPoint, this.shapes.get(i));
+            }
+        }
+
+        return intersection;
+    }
+
+    public Color getColor(Intersection intersection, Ray ray, int recursionLimit) {
+        // get the color of this intersection and use it as the base ambient color
+        Color result = calculateColor(intersection, ray);
+
+        // get the next intersection position
+        Vec3 intersectionPoint = ray.calculate(intersection.pointOfIntersection);
+        Vec3 norm = intersection.shape.getNormal(intersectionPoint);
+
+        // thanks to carl-vbn for his solution of moving the ray slightly
+        Vec3 reflectionVector = ray.direction.sub(norm.mult(2 * ray.direction.dot(norm)));
+        Vec3 reflectionOrigin = intersectionPoint.add(reflectionVector.mult(.001));
+        Ray reflectionRay = new Ray(reflectionOrigin, reflectionVector);
+
+        if (recursionLimit > 0) {
+            // if were under the reflection limit, calculate the next reflection
+            Intersection reflectionIntersection = getIntersection(reflectionRay);
+            if (reflectionIntersection.isIntersecting) {
+                result.linerInterpolation(getColor(reflectionIntersection, reflectionRay, recursionLimit - 1), intersection.shape.reflectivity);
+            } else {
+                // add indirect lighting
+                result.add(reflectionIntersection.shape.reflectivity * reflectionIntersection.shape.emission);
+            }
+        }
+
+        // make sure the result is in the valid color range
+        result.clamp();
+        return result;
+    }
+
+    private Color calculateColor(Intersection intersection, Ray ray) {
         // starting color with ambient lighting
         Color ambient = intersection.shape.color.clone(), color = ambient.clone();
 
+        // TODO: only the last light renders
         // get illumination based on phong shading algorithm
         for (int i = 0; i < this.lights.length(); i++) {
+            Light lightSource = this.lights.get(i);
             // get the point of intersection in 3d space
             Vec3 intersectionAt3DSpace = ray.calculate(intersection.pointOfIntersection);
             // light vector is a normalized vector pointing to the light source from point of intersection
-            Vec3 lightVector = intersectionAt3DSpace.sub(this.lights.get(i).position).get_normalized();
-            Vec3 intersectionPointToLight = this.lights.get(i).position.sub(intersectionAt3DSpace).get_normalized();
+            Vec3 lightVector = intersectionAt3DSpace.sub(lightSource.position).get_normalized();
+            Vec3 intersectionPointToLight = lightSource.position.sub(intersectionAt3DSpace).get_normalized();
             // get normal from point of intersection
             Vec3 normal = intersection.shape.getNormal(intersectionAt3DSpace).get_normalized();
             double diffused = 0;
 
             // first, check if the light intersects with any object
-            if (!rayIntersects(new Ray(this.lights.get(i).position, lightVector), intersection.shape))
+            if (!rayIntersects(new Ray(lightSource.position, lightVector), intersection.shape))
                 // if not, we can apply diffused shading
 
                 // to get the illumination we need the dot product of the light vector and the normal vector. since,
                 // the dot product will give: magnitude of normal * magnitude of light * cos the angle in between
                 // since both the normal vector and the light vector are normalized, their magnitude is equal to one.
                 // therefore, we get cos(the angle between them)
-                diffused = intersectionPointToLight.dot(normal);
+                diffused = intersectionPointToLight.dot(normal) * (lightSource.sizeScaler);
 
             // clamp the diffuse to make sure the global lighting stays consistent
             diffused = Math.max(this.GLOBAL_ILLUMINATION, Math.min(1, diffused));
@@ -130,21 +154,19 @@ public class Scene {
             // clamp scalar
             double specularScalar = Math.max(0, Math.min(1, reflectionVector.dot(cameraDirection)));
 
-            double specular = specularScalar * specularScalar * intersection.shape.reflectivity;
+            double specular = specularScalar * specularScalar * intersection.shape.reflectivity * lightSource.sizeScaler;
 
             // now that we have both specular and diffused lighting, we can modify the color to suit.
             // apply diffused shading to color
             color.mult(diffused);
             color.add(specular);
-            color.mult(this.lights.get(i).color);
+            color.mult(lightSource.color);
         }
 
         // once were done calculating the light level at a point, we can add the emission of the object
         ambient.mult(intersection.shape.emission);
         // and its ambient color
         color.add(ambient);
-        // make sure color stays within bounds of 0 - 1
-        color.clamp();
 
         return color;
     }

@@ -4,28 +4,46 @@ import renderer.Ray;
 import shapes.Scene;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 
 public class Renderer {
 
+    public static final int FAST_MODE = 3;
+    public static final int IMAGE_MODE = 2;
+    public static final int FULL_RENDER_MODE = 1;
+
+    public static int RENDERING_MODE;
+
     public static void render(Graphics g, Scene context) {
-        for (int y = 0; y < View.HEIGHT; y+=2) {
-            for (int x = 0; x < View.WIDTH; x+=2) {
-                // first, get x and y where -width < x < width and -height < y < height
+        for (int y = 0; y < View.HEIGHT; y += RENDERING_MODE) {
+            for (int x = 0; x < View.WIDTH; x += RENDERING_MODE) {
+                // first, get x and y where -width < x < width and -height < y < height, and the values are scaled in
+                // range of -1 to 1.
                 double currentX = (2 * (double) x / View.WIDTH) - 1, currentY = (2 * (double) y / View.HEIGHT) - 1;
 
-                // make the camera generate a ray
+                // make the camera generate a ray from the screen coordinates we just gathered
                 Ray ray = context.camera.makeRay(currentX, currentY);
 
                 // pass that ray to the scene, and get the emergant pixel color
-                //System.out.print((int) scene.castRay(ray).getRed());
                 renderer.Color nativeColor = context.castRay(ray);
+
+                // convert the color from the native color scheme to the java color object
                 g.setColor(new Color((int) (255 * nativeColor.getRed()), (int) (255 * nativeColor.getGreen()), (int) (255 * nativeColor.getBlue())));
-                g.drawRect(x, y, 1, 1);
 
-                // draw the pixel color
+                // in case well need to turn this frame into an image, copy the pixel to the image factory as well
+                // we only need to do this if the rendering mode is set to image mode or full render mode
+                if (RENDERING_MODE < 3)
+                    ImageFactory.setPixel(x, y, nativeColor);
+
+                // draw the pixel
+                // this causes a lot of drawing overhead, but after some testing it seems like the best option.
+                g.drawRect(x - RENDERING_MODE - 1, y - RENDERING_MODE - 1, RENDERING_MODE + 1, RENDERING_MODE + 1);
             }
-
-            // System.out.println();
         }
+
+        // draw the fps count
+        g.setColor(Color.BLACK);
+        g.setFont(new Font("Monospaced", Font.PLAIN, 10));
+        g.drawString("Frames: " + View.frames, 0,10);
     }
 }

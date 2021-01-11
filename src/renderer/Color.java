@@ -1,5 +1,6 @@
 package renderer;
 
+import mathematics.Functions;
 import mathematics.Vec3;
 import shapes.Shape;
 
@@ -57,13 +58,26 @@ public class Color {
     }
 
     public void clamp() {
-        this.r = Math.min(1, Math.max(this.r, 0));
-        this.g = Math.min(1, Math.max(this.g, 0));
-        this.b = Math.min(1, Math.max(this.b, 0));
+        this.r = Functions.clamp(this.r, 0, 1);
+        this.g = Functions.clamp(this.g, 0, 1);
+        this.b = Functions.clamp(this.b, 0, 1);
     }
 
     public Color clone() {
         return new Color(this.r, this.g, this.b);
+    }
+
+    private double lerp(double v0, double v1, double t) {
+        return (1 - t) * v0 + t * v1;
+    }
+
+    public void linerInterpolation(Color c, double factor) {
+        // interpolate a new color based on the factor given and the other color to combine.
+        this.r = lerp(this.r, c.r, factor);
+        this.g = lerp(this.g, c.g, factor);
+        this.b = lerp(this.b, c.b, factor);
+
+        //this.clamp();
     }
 
     public String toString(){

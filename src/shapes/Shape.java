@@ -1,3 +1,5 @@
+// TODO: rewrite shapes with mathematical functions in mind, to hopefully optimize them.
+
 package shapes;
 
 import mathematics.Vec3;
@@ -8,6 +10,7 @@ import renderer.Color;
 public abstract class Shape {
 
     protected Vec3 pos;
+
     // ambient color
     protected Color color;
     protected double emission, reflectivity;

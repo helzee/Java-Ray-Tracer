@@ -8,7 +8,7 @@ import java.io.IOException;
 
 public class ImageFactory {
 
-    public static int width = 1920, height = 1080;
+    public static int width = View.WIDTH, height = View.HEIGHT;
     public static Color[][] pixels = new Color[width][height];
 
     public static void start() {
