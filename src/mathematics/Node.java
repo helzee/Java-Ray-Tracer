@@ -44,7 +44,7 @@ public class Node<T> {
 
         return temp;
     }
-
+    //track length as nodes are appended/popped? check how often this function is called in program and how big list gets.
     public int length() {
         Node<T> temp = this;
         int counter = 1;
