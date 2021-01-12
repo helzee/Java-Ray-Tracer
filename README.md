@@ -32,6 +32,7 @@ At some point I would like to add
 The raytrace has both diffused and specular lighting algorithms, and combines them using the Phong algorithms.
 It is also able to recursivly render reflections.
 
-I plan on adding the ability to render textures and convex polygons, in order to render more complex 3D models.
+~~I plan on adding the ability to render textures~~ and convex polygons, in order to render more complex 3D models.
+The renderer can now render textures on most surfaces, and an implementation to all primitives is almost done.
 
 There is no theoretical limits to the renering width and height, however, the best my computer could do was HD (1980 by 1080) and it should definatly be possible to render 4K images if you allocate enough RAM to the JVM.
