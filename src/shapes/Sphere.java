@@ -5,12 +5,14 @@ import renderer.Intersection;
 import renderer.Ray;
 import renderer.Color;
 
+import java.awt.*;
+
 public class Sphere extends Shape {
 
     private double radius;
 
-    public Sphere(Vec3 p, double r, Color c, double emission, double reflectivity) {
-        super(p, c, emission, reflectivity);
+    public Sphere(Vec3 p, double r, VisualProperty visualProperty) {
+        super(p, visualProperty);
         this.radius = r;
     }
 
@@ -101,5 +103,26 @@ public class Sphere extends Shape {
             if (this.pos == ((Sphere) o).pos && this.radius == ((Sphere) o).radius)
                 return true;
         return false;
+    }
+
+    @Override
+    public Color getTextureColor(Vec3 p) {
+        // courtesy of the Wikipedia UV Mapping article
+        // default values constructor
+        double u, v;
+
+        // localize sphere
+        Vec3 localPoint = p.sub(this.pos).get_normalized();
+
+        // get u, v as x, y coordinates
+        u = 0.5 + Math.atan2(localPoint.x, localPoint.z) / (2 * Math.PI);
+        v = 0.5 - Math.asin(localPoint.y) / Math.PI;
+
+        // get u, v as x, y coordinates on the picture
+        u *= this.visualProperty.texture.getWidth();
+        v *= this.visualProperty.texture.getHeight();
+
+        // convert the color value in the image
+        return Color.convert(new java.awt.Color(this.visualProperty.texture.getRGB((int) u, (int) v), true));
     }
 }

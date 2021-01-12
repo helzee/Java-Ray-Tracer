@@ -3,14 +3,12 @@ package shapes;
 import mathematics.Node;
 import mathematics.Vec3;
 import renderer.*;
-import sun.awt.SunHints;
-
-import java.security.InvalidParameterException;
 
 public class Scene {
 
     private Node<Shape> shapes;
     private Node<Light> lights;
+    private Sphere sky;
     public Camera camera;
 
     public static boolean flag = false;
@@ -18,7 +16,7 @@ public class Scene {
     final double GLOBAL_ILLUMINATION;
     final int RECURSION_DEPTH;
 
-    public Scene(double globalIllumination, int recursionDepth, Camera camera, Shape... shapes) {
+    public Scene(double globalIllumination, int recursionDepth, Camera camera, Sphere sky, Shape... shapes) {
         this.lights = new Node<Light>(null);
         this.shapes = new Node<Shape>(null);
         this.camera = camera;
@@ -26,6 +24,8 @@ public class Scene {
         // global lighting variables
         this.GLOBAL_ILLUMINATION = globalIllumination;
         this.RECURSION_DEPTH = recursionDepth;
+
+        this.sky = sky;
 
         for (Shape shape : shapes)
             this.shapes.append(shape);
@@ -58,7 +58,7 @@ public class Scene {
         // then, find how illuminated the point should be
         if (intersection.isIntersecting)
             return getColor(intersection, r, this.RECURSION_DEPTH);
-        return new Color(0);
+        return sky.getTextureColor(r.direction);
 
     }
 
@@ -91,25 +91,31 @@ public class Scene {
         // get the color of this intersection and use it as the base ambient color
         Color result = calculateColor(intersection, ray);
 
-        // get the next intersection position
-        Vec3 intersectionPoint = ray.calculate(intersection.pointOfIntersection);
-        Vec3 norm = intersection.shape.getNormal(intersectionPoint);
+        // if the shape is reflective, we can apply reflections.
+        if (intersection.shape.visualProperty.isReflective) {
+            // get the next intersection position
+            Vec3 intersectionPoint = ray.calculate(intersection.pointOfIntersection);
+            Vec3 norm = intersection.shape.getNormal(intersectionPoint);
 
-        // thanks to carl-vbn for his solution of moving the ray slightly
-        Vec3 reflectionVector = ray.direction.sub(norm.mult(2 * ray.direction.dot(norm)));
-        Vec3 reflectionOrigin = intersectionPoint.add(reflectionVector.mult(.001));
-        Ray reflectionRay = new Ray(reflectionOrigin, reflectionVector);
+            // thanks to carl-vbn for his solution of moving the ray slightly
+            Vec3 reflectionVector = ray.direction.sub(norm.mult(2 * ray.direction.dot(norm)));
+            Vec3 reflectionOrigin = intersectionPoint.add(reflectionVector.mult(.001));
+            Ray reflectionRay = new Ray(reflectionOrigin, reflectionVector);
 
-        if (recursionLimit > 0) {
-            // if were under the reflection limit, calculate the next reflection
-            Intersection reflectionIntersection = getIntersection(reflectionRay);
-            if (reflectionIntersection.isIntersecting) {
-                result.linerInterpolation(getColor(reflectionIntersection, reflectionRay, recursionLimit - 1), intersection.shape.reflectivity);
-            } else {
-                // add indirect lighting
-                result.add(reflectionIntersection.shape.reflectivity * reflectionIntersection.shape.emission);
+            double reflectivity = intersection.shape.visualProperty.reflectivity;
+
+            if (recursionLimit > 0) {
+                // if were under the reflection limit, calculate the next reflection
+                Intersection reflectionIntersection = getIntersection(reflectionRay);
+                if (reflectionIntersection.isIntersecting)
+                    result.linerInterpolation(getColor(reflectionIntersection, reflectionRay, recursionLimit - 1), reflectivity);
+                else
+                    // if the reflection does not intersect with any other shape, it must intersect with the skybox.
+                    // return the color of the sky box instead.
+                    result.linerInterpolation(sky.getTextureColor(reflectionRay.direction), reflectivity);
             }
         }
+        // if the shape is not reflective, its color will simply be its ambient color with shadows applied.
 
         // make sure the result is in the valid color range
         result.clamp();
@@ -117,15 +123,23 @@ public class Scene {
     }
 
     private Color calculateColor(Intersection intersection, Ray ray) {
+        // this will shorten up a lot of future calls
+        VisualProperty visualProperty = intersection.shape.visualProperty;
+        // get the point of intersection in 3d space
+        Vec3 intersectionAt3DSpace = ray.calculate(intersection.pointOfIntersection);
+
         // starting color with ambient lighting
-        Color ambient = intersection.shape.color.clone(), color = ambient.clone();
+        Color ambient = visualProperty.color.clone(), color = ambient.clone();
+
+        // if the shape is textured, apply the texture first
+        if (visualProperty.isTextured)
+            // take the color and interpolate it with opposite respect to the reflectivity factor
+            color.linerInterpolation(intersection.shape.getTextureColor(intersectionAt3DSpace), 1 - visualProperty.reflectivity);
 
         // TODO: only the last light renders
         // get illumination based on phong shading algorithm
         for (int i = 0; i < this.lights.length(); i++) {
             Light lightSource = this.lights.get(i);
-            // get the point of intersection in 3d space
-            Vec3 intersectionAt3DSpace = ray.calculate(intersection.pointOfIntersection);
             // light vector is a normalized vector pointing to the light source from point of intersection
             Vec3 lightVector = intersectionAt3DSpace.sub(lightSource.position).get_normalized();
             Vec3 intersectionPointToLight = lightSource.position.sub(intersectionAt3DSpace).get_normalized();
@@ -149,22 +163,24 @@ public class Scene {
             // secondly, apply specular brightness
             // camera direction relative to point of intersection
             Vec3 cameraDirection = this.camera.getOrigin().sub(intersectionAt3DSpace).get_normalized();
-            Vec3 reflectionVector = lightVector.sub(normal.mult(2*lightVector.dot(normal)));
+            Vec3 reflectionVector = lightVector.sub(normal.mult(2 * lightVector.dot(normal)));
 
             // clamp scalar
             double specularScalar = Math.max(0, Math.min(1, reflectionVector.dot(cameraDirection)));
 
-            double specular = specularScalar * specularScalar * intersection.shape.reflectivity * lightSource.sizeScaler;
+            double specular = specularScalar * specularScalar * visualProperty.reflectivity * lightSource.sizeScaler;
 
             // now that we have both specular and diffused lighting, we can modify the color to suit.
             // apply diffused shading to color
             color.mult(diffused);
+            // apply specular
             color.add(specular);
+            // change color based on light source color
             color.mult(lightSource.color);
         }
 
         // once were done calculating the light level at a point, we can add the emission of the object
-        ambient.mult(intersection.shape.emission);
+        ambient.mult(visualProperty.emission);
         // and its ambient color
         color.add(ambient);
 

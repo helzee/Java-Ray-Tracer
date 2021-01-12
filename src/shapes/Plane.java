@@ -9,8 +9,8 @@ public class Plane extends Shape {
 
     private Vec3 norm;
 
-    public Plane(Vec3 p, Vec3 n, Color c, double emission, double reflectivity) {
-        super(p, c, emission, reflectivity);
+    public Plane(Vec3 p, Vec3 n, VisualProperty visualProperty) {
+        super(p, visualProperty);
         this.norm = n.get_normalized();
     }
 
@@ -63,5 +63,11 @@ public class Plane extends Shape {
             if (this.pos == ((Plane) o).pos && this.norm == ((Plane) o).norm)
                 return true;
         return false;
+    }
+
+    @Override
+    public Color getTextureColor(Vec3 p) {
+        // TODO
+        return null;
     }
 }

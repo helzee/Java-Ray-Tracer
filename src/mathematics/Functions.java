@@ -2,8 +2,8 @@ package mathematics;
 
 public class Functions {
 
-    public static boolean inRange(double value, double starting, double ending) {
-        if (value > starting && value < ending)
+    public static boolean inRange(double value, double min, double max) {
+        if (value > min && value < max)
             return true;
         return false;
     }

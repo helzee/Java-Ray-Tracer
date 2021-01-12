@@ -15,11 +15,11 @@ public class Renderer {
     public static int RENDERING_MODE;
 
     public static void render(Graphics g, Scene context) {
-        for (int y = 0; y < View.HEIGHT; y += RENDERING_MODE) {
-            for (int x = 0; x < View.WIDTH; x += RENDERING_MODE) {
+        for (int y = 0; y < Driver.HEIGHT; y += RENDERING_MODE) {
+            for (int x = 0; x < Driver.WIDTH; x += RENDERING_MODE) {
                 // first, get x and y where -width < x < width and -height < y < height, and the values are scaled in
                 // range of -1 to 1.
-                double currentX = (2 * (double) x / View.WIDTH) - 1, currentY = (2 * (double) y / View.HEIGHT) - 1;
+                double currentX = (2 * (double) x / Driver.WIDTH) - 1, currentY = (2 * (double) y / Driver.HEIGHT) - 1;
 
                 // make the camera generate a ray from the screen coordinates we just gathered
                 Ray ray = context.camera.makeRay(currentX, currentY);
@@ -28,7 +28,7 @@ public class Renderer {
                 renderer.Color nativeColor = context.castRay(ray);
 
                 // convert the color from the native color scheme to the java color object
-                g.setColor(new Color((int) (255 * nativeColor.getRed()), (int) (255 * nativeColor.getGreen()), (int) (255 * nativeColor.getBlue())));
+                g.setColor(nativeColor.convert());
 
                 // in case well need to turn this frame into an image, copy the pixel to the image factory as well
                 // we only need to do this if the rendering mode is set to image mode or full render mode
@@ -44,6 +44,6 @@ public class Renderer {
         // draw the fps count
         g.setColor(Color.BLACK);
         g.setFont(new Font("Monospaced", Font.PLAIN, 10));
-        g.drawString("Frames: " + View.frames, 0,10);
+        g.drawString("Frames: " + Driver.frames, 0,10);
     }
 }

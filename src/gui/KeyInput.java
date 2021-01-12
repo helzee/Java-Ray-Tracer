@@ -9,25 +9,25 @@ public class KeyInput implements KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_W)
-            View.activeKeys[0] = true;
+            Driver.activeKeys[0] = true;
 
         if (e.getKeyCode() == KeyEvent.VK_S)
-            View.activeKeys[2] = true;
+            Driver.activeKeys[2] = true;
 
         if (e.getKeyCode() == KeyEvent.VK_A)
-            View.activeKeys[1] = true;
+            Driver.activeKeys[1] = true;
 
         if (e.getKeyCode() == KeyEvent.VK_D)
-            View.activeKeys[3] = true;
+            Driver.activeKeys[3] = true;
 
         if (e.getKeyCode() == KeyEvent.VK_SHIFT)
-            View.activeKeys[4] = true;
+            Driver.activeKeys[4] = true;
 
         if (e.getKeyCode() == KeyEvent.VK_SPACE)
-            View.activeKeys[5] = true;
+            Driver.activeKeys[5] = true;
 
         if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
-            View.requestStop = true;
+            Driver.requestStop = true;
 
         if (e.getKeyCode() == KeyEvent.VK_P) {
             try {
@@ -44,22 +44,22 @@ public class KeyInput implements KeyListener {
     @Override
     public void keyReleased(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_W)
-            View.activeKeys[0] = false;
+            Driver.activeKeys[0] = false;
 
         if (e.getKeyCode() == KeyEvent.VK_S)
-            View.activeKeys[2] = false;
+            Driver.activeKeys[2] = false;
 
         if (e.getKeyCode() == KeyEvent.VK_A)
-            View.activeKeys[1] = false;
+            Driver.activeKeys[1] = false;
 
         if (e.getKeyCode() == KeyEvent.VK_D)
-            View.activeKeys[3] = false;
+            Driver.activeKeys[3] = false;
 
         if (e.getKeyCode() == KeyEvent.VK_SHIFT)
-            View.activeKeys[4] = false;
+            Driver.activeKeys[4] = false;
 
         if (e.getKeyCode() == KeyEvent.VK_SPACE)
-            View.activeKeys[5] = false;
+            Driver.activeKeys[5] = false;
     }
 
     @Override

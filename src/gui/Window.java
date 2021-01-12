@@ -8,7 +8,7 @@ public class Window {
 
     public static JFrame frame;
 
-    public Window(int width, int height, String title, View view) {
+    public Window(int width, int height, String title, Driver view) {
         frame = new JFrame(title);
         frame.setPreferredSize(new Dimension(width, height));
         frame.setMaximumSize(new Dimension(width, height));

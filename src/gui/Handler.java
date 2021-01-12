@@ -9,34 +9,34 @@ public class Handler {
         Camera cam = View.scene.camera;
 
         // w
-        if (View.activeKeys[0])
+        if (Driver.activeKeys[0])
             cam.translate(new Vec3(.1, 0, 0));
 
         // s
-        if (View.activeKeys[2])
+        if (Driver.activeKeys[2])
             cam.translate(new Vec3(-.1, 0, 0));
 
         // a
-        if (View.activeKeys[1])
+        if (Driver.activeKeys[1])
             cam.translate(new Vec3(0, 0, -.1));
 
         // d
-        if (View.activeKeys[3])
+        if (Driver.activeKeys[3])
             cam.translate(new Vec3(0, 0, .1));
 
         // shift
-        if (View.activeKeys[4])
+        if (Driver.activeKeys[4])
             cam.translate(cam.getUpGuide().mult(.1));
 
         // space
-        if (View.activeKeys[5])
+        if (Driver.activeKeys[5])
             cam.translate(cam.getUpGuide().mult(-.1));
 
         // move the camera based on last movement with the mouse
-        cam.rotate(View.mousePosition.x * View.lastTime / 4e17, View.mousePosition.y * View.lastTime / 4e17);
+        cam.rotate(Driver.mousePosition.x * Driver.lastTime / 4e17, Driver.mousePosition.y * Driver.lastTime / 4e17);
 
         if (Window.frame.isActive() && Window.frame.isFocused())
             // only move the mouse if the user is actually in the application
-            View.robot.mouseMove(View.cenX, View.cenY);
+            Driver.robot.mouseMove(Driver.cenX, Driver.cenY);
     }
 }

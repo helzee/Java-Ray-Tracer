@@ -9,8 +9,8 @@ public class Triangle extends Shape {
 
     private Vec3 pos2, pos3;
 
-    public Triangle(Vec3 pos, Vec3 pos2, Vec3 pos3, Color c, double emission, double reflectivity) {
-        super(pos, c, emission, reflectivity);
+    public Triangle(Vec3 pos, Vec3 pos2, Vec3 pos3, VisualProperty visualProperty) {
+        super(pos, visualProperty);
         this.pos2 = pos2;
         this.pos3 = pos3;
     }
@@ -66,5 +66,11 @@ public class Triangle extends Shape {
             if (this.pos == ((Triangle) o).pos && this.pos2 == ((Triangle) o).pos2 && this.pos3 == ((Triangle) o).pos3)
                 return true;
         return false;
+    }
+
+    @Override
+    public Color getTextureColor(Vec3 p) {
+        // TODO
+        return null;
     }
 }

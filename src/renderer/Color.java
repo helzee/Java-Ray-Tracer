@@ -80,6 +80,15 @@ public class Color {
         //this.clamp();
     }
 
+    public java.awt.Color convert() {
+        this.clamp();
+        return new java.awt.Color((int) (r * 255), (int) (g * 255), (int) (b * 255));
+    }
+
+    public static Color convert(java.awt.Color c) {
+        return new Color((double) c.getRed() / 255, (double) c.getGreen() / 255, (double) c.getBlue() / 255);
+    }
+
     public String toString(){
         return "(" + this.r + ", " + this.g + ", " + this.b + ")";
     }

@@ -53,13 +53,16 @@ public class Camera {
         Vec3 relativeNewTarget = mouseTranslation3D.add(this.forward);
 
         // make the relation between the lengths the same
-        // TODO: fast inverse root is applicable here
         Vec3 potentialTarget = this.origin.add(relativeNewTarget.mult(localDirection.length() / relativeNewTarget.length()));
 
-        // clamp the pitch to make sure the forward vector never flips
-        if (potentialTarget.sub(this.origin).y == +-0.1)
+        // if the pitch is too big, the forward vector may move behind the cameras origin. This will cause the camera to
+        // flip, making to forward vector point the other way around. After which, if the player continues rotating down
+        // the forward vector will once again end up behind the origin. To solve this, limit the camera's new target to
+        // never be too out of the cameras origin.
+        if (!Functions.inRange(this.origin.y - potentialTarget.y, -7, 7))
             potentialTarget = this.target;
 
+        // once the new target is guaranteed to be in range, apply the changes.
         this.target = potentialTarget;
 
         // lastly, since we changed the target, we must update our guiding vectors.
@@ -81,14 +84,13 @@ public class Camera {
 
     private void updateSpecificationVectors() {
         this.forward = this.target.sub(this.origin).get_normalized();
-        this.right = this.forward.cross(this.upGuide).get_normalized();
+        this.right = this.upGuide.cross(this.forward).get_normalized();
         this.up = this.right.cross(this.forward);
     }
 
     public Ray makeRay(double x, double y) {
         // Generates a new ray when a point in the screen is given.
         // x and y must be between +-width and +-height, respectively
-        // forward + (right * x * width) + (up * y * height)
         Vec3 direction = this.forward.add(this.right.mult(this.width * x)).add(this.up.mult(this.height * y));
 
         return new Ray(this.origin, direction.get_normalized());

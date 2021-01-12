@@ -13,9 +13,9 @@ public class MouseMovementInput implements MouseMotionListener {
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        Point.Double newPoint = new Point.Double((e.getXOnScreen() - View.cenX) / 1, (e.getYOnScreen() - View.cenY) / 1);
+        Point.Double newPoint = new Point.Double((e.getXOnScreen() - Driver.cenX) / 1, (e.getYOnScreen() - Driver.cenY) / 1);
         if (newPoint != new Point.Double(0,0))
-            View.mousePosition = newPoint;
+            Driver.mousePosition = newPoint;
     }
 
 }
