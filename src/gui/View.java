@@ -29,7 +29,7 @@ public class View {
 
         scene = new Scene(.4, 3, camera, sky,
                 //new Plane(new Vec3(0, -.5, 0), new Vec3(0, 1, 0), new VisualProperty(new renderer.Color(.578, .747, .802), .2, .3)),
-                new Plane(new Vec3(0, -.5, 0), new Vec3(0, 1, 0), testImage),
+                new Plane(new Vec3(0, -.5, 0), new Vec3(0, 1, 0), new VisualProperty(new renderer.Color(.578, .747, .802), .2, .3)),
                 //new Plane(new Vec3(0, -9.5, 0), new Vec3(0, 1, 0), new renderer.Color(0.313,0.552,0.941), .3, .3),
                 //new Plane(new Vec3(5, 0, 0), new Vec3(-1, 0, 0), new renderer.Color(0.686, 0.941, 0.313), .3, .3),
                 //new Plane(new Vec3(-5, 0, 0), new Vec3(-1, 0, 0), new renderer.Color(0.823, 0.313, 0.941), .3, .3),
@@ -37,7 +37,7 @@ public class View {
                 //new Plane(new Vec3(0, 0, -5), new Vec3(0, 0, -1), new renderer.Color(1, 1, 0), .3, .3),
                 new Sphere(new Vec3(-2, 1, 2), 1, new VisualProperty(new renderer.Color(0.941, .529, 0.313), .6, .5)),
                 new Sphere(new Vec3(-3, 0, 1), 1, new VisualProperty(new renderer.Color(.5, 1, .9), .3, .2)),
-                new Sphere(new Vec3(0, 1, 2), .5, new VisualProperty(new renderer.Color(1), .5, .3))
+                new Sphere(new Vec3(0, 1, 2), .5, testImage)
                 //new Triangle(new Vec3(1,2,2), new Vec3(0,.2,0), new Vec3(0,0,3), new renderer.Color(1, 0,0), .1,.4)
         );
 
